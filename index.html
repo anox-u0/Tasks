@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0;
+            color: #1e293b;
+        }
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 8px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .custom-checkbox-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .custom-checkbox-circle.checked {
+            background-color: #1e293b;
+            border-color: #1e293b;
+        }
+
+        .custom-checkbox-circle .check-icon {
+            color: #fff;
+            font-size: 12px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .custom-checkbox-circle.checked .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .task-list-item.avoided .task-name {
+            color: #64748b;
+            text-decoration: line-through;
+        }
+        .task-list-item.avoided .task-meta {
+            color: #94a3b8;
+        }
+
+        #habitNameInput::placeholder {
+            color: #94a3b8;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+        input[type="date"]::-webkit-inner-spin-button {
+            display: none;
+        }
+        input[type="date"]::-webkit-outer-spin-button {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md border border-slate-100">
+        <h1 class="text-2xl font-light text-slate-800 mb-2 tracking-wide">Tasks</h1>
+        <p id="tasksCounter" class="text-sm text-slate-500 mb-6 font-mono">0 / 0</p>
+
+        <div class="mb-8 border-b border-slate-200 pb-4">
+            <div class="flex items-center">
+                <input type="text" id="habitNameInput" class="flex-grow text-base p-2 placeholder-slate-400 font-normal focus:outline-none focus:ring-0 border-none bg-transparent" placeholder="Add task">
+                <button id="addHabitBtn" class="text-slate-500 hover:text-slate-700 text-3xl ml-2 font-light leading-none transition-colors duration-200">
+                    +
+                </button>
+            </div>
+            <div class="flex items-center text-slate-500 text-sm font-normal mt-3 space-x-4">
+                <div class="flex items-center">
+                    <i class="far fa-bookmark mr-1 text-base"></i>
+                    <select id="newPriority" class="bg-transparent border-0 text-slate-600 focus:outline-none cursor-pointer p-0 m-0" aria-label="Select priority">
+                        <option value="high">High</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </div>
+                <div class="flex items-center">
+                    <i class="far fa-calendar-alt mr-1 text-base"></i>
+                    <input type="date" id="newDueDate" class="bg-transparent border-0 text-slate-600 focus:outline-none cursor-pointer text-sm p-0 m-0 w-28" aria-label="Select due date">
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <div class="w-full h-px bg-slate-200">
+                <div id="progressBar" class="h-px bg-black transition-all duration-500" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div id="habitList" class="space-y-0.5 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+            <div class="py-16 text-center">
+                <i class="far fa-circle text-slate-300 text-3xl mb-4"></i>
+                <p class="text-slate-400 text-sm">No tasks</p>
+            </div>
+        </div>
+
+        <div class="text-center text-slate-500 text-sm mt-8 font-mono">
+            <span id="remainingTasksCounter">0</span> remaining
+        </div>
+    </div>
+
+    <div id="habitDetailsModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-2xl border border-slate-100 transform scale-95 opacity-0 transition-all duration-300 ease-in-out">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="detailsHabitName" class="text-2xl font-bold text-slate-800"></h2>
+                <button id="closeDetailsModal" class="text-slate-500 hover:text-slate-700 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-4 text-slate-700">
+                <p><strong class="text-slate-800">Current Streak:</strong> <span id="detailsCurrentStreak" class="font-semibold text-lg text-slate-800">0 days</span></p>
+                <p><strong class="text-slate-800">Trigger:</strong> <span id="detailsHabitTrigger">N/A</span></p>
+                <p><strong class="text-slate-800">Replacement:</strong> <span id="detailsHabitReplacement">N/A</span></p>
+                <p><strong class="text-slate-800">Severity:</strong> <span id="detailsHabitSeverity" class="capitalize"></span></p>
+
+                <h3 class="text-xl font-bold text-slate-800 mt-6 mb-4">Progress Calendar (Last 30 Days)</h3>
+                <div id="calendarView" class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm bg-slate-50 p-3 rounded-md border border-slate-200">
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-800 mt-6 mb-4">Avoidance Trend</h3>
+                <div class="relative h-64 bg-slate-50 p-3 rounded-md border border-slate-200">
+                    <canvas id="avoidanceChart"></canvas>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-800 mt-6 mb-4">Insights</h3>
+                <p id="insightText" class="text-slate-600 bg-slate-50 p-4 rounded-md border border-slate-200 leading-relaxed"></p>
+
+                <div class="flex justify-end mt-8">
+                    <button id="deleteHabitBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-5 rounded-md shadow transition duration-200"><i class="fas fa-trash-alt mr-2"></i>Delete Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageBox" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[999] hidden">
+        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-sm text-center transform scale-95 opacity-0 transition-all duration-300 ease-in-out">
+            <h3 id="messageBoxTitle" class="text-xl font-bold text-slate-800 mb-4"></h3>
+            <p id="messageBoxContent" class="text-slate-700 mb-6 text-lg leading-relaxed"></p>
+            <div id="messageBoxButtons" class="flex justify-center space-x-4">
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const appId = 'anti-habit-tracker-v1-minimal';
+
+        const getTodayDateString = () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const getHabits = () => {
+            const habits = JSON.parse(localStorage.getItem(`${appId}-habits`)) || [];
+            return habits;
+        };
+
+        const saveHabits = (habits) => {
+            localStorage.setItem(`${appId}-habits`, JSON.stringify(habits));
+        };
+
+        const getHabitLogs = () => {
+            const logs = JSON.parse(localStorage.getItem(`${appId}-habit-logs`)) || {};
+            return logs;
+        };
+
+        const saveHabitLogs = (logs) => {
+            localStorage.setItem(`${appId}-habit-logs`, JSON.stringify(logs));
+        };
+
+        let habitListContainer;
+        let habitNameInput;
+        let addHabitBtn;
+        let newPrioritySelect;
+        let newDueDateInput;
+        let tasksCounter;
+        let remainingTasksCounter;
+        let progressBar;
+
+        let habitDetailsModal;
+        let closeDetailsModalBtn;
+        let detailsHabitName;
+        let detailsCurrentStreak;
+        let detailsHabitTrigger;
+        let detailsHabitReplacement;
+        let detailsHabitSeverity;
+        let calendarView;
+        let avoidanceChartCanvas;
+        let insightText;
+        let deleteHabitBtn;
+
+        let messageBox;
+        let messageBoxTitle;
+        let messageBoxContent;
+        let messageBoxButtons;
+
+        let currentChart = null;
+
+        const showMessageBox = (title, content, buttons) => {
+            messageBoxTitle.textContent = title;
+            messageBoxContent.textContent = content;
+            messageBoxButtons.innerHTML = '';
+
+            buttons.forEach(buttonConfig => {
+                const btn = document.createElement('button');
+                btn.textContent = buttonConfig.text;
+                btn.className = `py-2 px-4 rounded-md font-semibold transition duration-200 text-base ${buttonConfig.className}`;
+                btn.onclick = () => {
+                    hideMessageBox();
+                    if (buttonConfig.onClick) {
+                        buttonConfig.onClick();
+                    }
+                };
+                messageBoxButtons.appendChild(btn);
+            });
+
+            messageBox.classList.remove('hidden');
+            const innerMessageBox = messageBox.querySelector('div');
+            innerMessageBox.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                innerMessageBox.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        };
+
+        const hideMessageBox = () => {
+            const innerMessageBox = messageBox.querySelector('div');
+            innerMessageBox.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 300);
+        };
+
+
+        const renderHabits = () => {
+            const habits = getHabits();
+            const habitLogs = getHabitLogs();
+            const today = getTodayDateString();
+
+            habitListContainer.innerHTML = '';
+
+            let avoidedCount = 0;
+            const totalHabits = habits.length;
+
+            if (habits.length === 0) {
+                habitListContainer.innerHTML = `
+                    <div class="py-16 text-center">
+                        <i class="far fa-circle text-slate-300 text-3xl mb-4"></i>
+                        <p class="text-slate-400 text-sm">No tasks</p>
+                    </div>
+                `;
+            } else {
+                const sortedHabits = [...habits].sort((a, b) => {
+                    const aIsAvoided = habitLogs[a.id] && habitLogs[a.id][today] && habitLogs[a.id][today].avoided;
+                    const bIsAvoided = habitLogs[b.id] && habitLogs[b.id][today] && habitLogs[b.id][today].avoided;
+
+                    if (aIsAvoided !== bIsAvoided) {
+                        return aIsAvoided ? 1 : -1;
+                    }
+
+                    const priorityOrder = { high: 0, medium: 1, low: 2 };
+                    return priorityOrder[a.severity.toLowerCase()] - priorityOrder[b.severity.toLowerCase()];
+                });
+
+
+                sortedHabits.forEach(habit => {
+                    const habitId = habit.id;
+                    const todayLog = habitLogs[habitId] ? habitLogs[habitId][today] : null;
+                    const isAvoidedToday = todayLog ? todayLog.avoided : null;
+
+                    if (isAvoidedToday === true) {
+                        avoidedCount++;
+                    }
+
+                    const habitCard = document.createElement('div');
+                    habitCard.id = `habit-${habitId}`;
+                    habitCard.className = `group flex items-start gap-3 py-3 hover:bg-slate-50 -mx-2 px-2 rounded transition-colors task-list-item ${isAvoidedToday === true ? 'avoided' : ''}`;
+
+
+                    habitCard.addEventListener('click', (event) => {
+                        if (!event.target.closest('.custom-checkbox-circle') && !event.target.closest('.delete-button')) {
+                            openHabitDetailsModal(habitId);
+                        }
+                    });
+
+                    let metaText = formatCreatedDate(new Date(habit.createdAt));
+                    let dueDateHtml = '';
+                    if (habit.dueDate) {
+                         const due = new Date(habit.dueDate);
+                         const isOverdue = due < new Date() && !isAvoidedToday;
+                         dueDateHtml = `
+                            <span class="text-xs text-slate-500 font-mono ${isOverdue ? 'text-black' : ''}">
+                                • due ${formatDate(due)}
+                            </span>
+                         `;
+                    }
+
+                    let prioritySymbol = '◦';
+                    switch(habit.severity.toLowerCase()) {
+                        case 'high': prioritySymbol = '●'; break;
+                        case 'medium': prioritySymbol = '○'; break;
+                        case 'low': prioritySymbol = '◦'; break;
+                    }
+                    const priorityColorClass = habit.severity.toLowerCase() === 'high' ? 'text-black' : 'text-slate-400';
+
+                    habitCard.innerHTML = `
+                        <div class="custom-checkbox-circle ${isAvoidedToday === true ? 'checked' : ''}" data-habit-id="${habitId}" data-status="${isAvoidedToday}">
+                            <i class="fas fa-check check-icon"></i>
+                        </div>
+                        <div class="flex-grow ml-4 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs ${priorityColorClass}">${prioritySymbol}</span>
+                                <p class="task-name text-base font-normal ${isAvoidedToday === true ? 'text-slate-500 line-through' : 'text-slate-800'}">
+                                    ${habit.name}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                                <span>${metaText}</span>
+                                ${dueDateHtml}
+                            </div>
+                        </div>
+                        <button class="delete-button flex-shrink-0 h-8 w-8 text-slate-300 hover:text-slate-600 hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                                data-habit-id="${habitId}" aria-label="Remove task">
+                            <i class="fas fa-trash-alt h-3 w-3"></i>
+                        </button>
+                    `;
+                    habitListContainer.appendChild(habitCard);
+                });
+            }
+
+            tasksCounter.textContent = `${avoidedCount} / ${totalHabits}`;
+            remainingTasksCounter.textContent = `${totalHabits - avoidedCount} remaining`;
+
+            const completionPercentage = totalHabits > 0 ? (avoidedCount / totalHabits) * 100 : 0;
+            if (progressBar) {
+                 progressBar.style.width = `${completionPercentage}%`;
+            }
+
+            attachCheckboxCircleListeners();
+            attachDeleteButtonListeners();
+        };
+
+        const attachCheckboxCircleListeners = () => {
+            document.querySelectorAll('.custom-checkbox-circle').forEach(circle => {
+                const newCircle = circle.cloneNode(true);
+                circle.parentNode.replaceChild(newCircle, circle);
+
+                newCircle.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const habitId = parseInt(newCircle.dataset.habitId);
+                    const currentStatus = newCircle.dataset.status;
+
+                    if (currentStatus === 'true') {
+                        logHabit(habitId, null);
+                    } else {
+                        logHabit(habitId, true);
+                    }
+                });
+            });
+        };
+
+        const attachDeleteButtonListeners = () => {
+            document.querySelectorAll('.delete-button').forEach(button => {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+
+                newButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const habitId = parseInt(newButton.dataset.habitId);
+                    deleteHabit(habitId);
+                });
+            });
+        };
+
+
+        const addHabit = (name, trigger = '', replacement = '', severity = 'medium', dueDate = null) => {
+            const habits = getHabits();
+            const newId = habits.length > 0 ? Math.max(...habits.map(h => h.id)) + 1 : 1;
+            const newHabit = {
+                id: newId,
+                name: name,
+                trigger: trigger,
+                replacement: replacement,
+                severity: severity,
+                dueDate: dueDate,
+                createdAt: new Date().toISOString()
+            };
+            habits.push(newHabit);
+            saveHabits(habits);
+            renderHabits();
+        };
+
+        const formatDate = (date) => {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const taskDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            const diffTime = taskDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return "today";
+            if (diffDays === 1) return "tomorrow";
+            if (diffDays === -1) return "yesterday";
+            if (diffDays > 1 && diffDays <= 7) return `in ${diffDays} days`;
+            if (diffDays < -1 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
+
+            return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        };
+
+        const formatCreatedDate = (date) => {
+            const now = new Date();
+            const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+            if (diffHours < 1) return "just now";
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffHours < 48) return "yesterday";
+
+            return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        };
+
+
+        const logHabit = (habitId, avoided) => {
+            const habitLogs = getHabitLogs();
+            const today = getTodayDateString();
+
+            if (!habitLogs[habitId]) {
+                habitLogs[habitId] = {};
+            }
+
+            if (avoided === null) {
+                delete habitLogs[habitId][today];
+                if (Object.keys(habitLogs[habitId]).length === 0) {
+                    delete habitLogs[habitId];
+                }
+            } else {
+                habitLogs[habitId][today] = { avoided: avoided };
+            }
+
+            saveHabitLogs(habitLogs);
+            renderHabits();
+        };
+
+        const deleteHabit = (habitId) => {
+            showMessageBox(
+                'Confirm Deletion',
+                'Are you sure you want to delete this task? This action cannot be undone.',
+                [
+                    { text: 'Cancel', className: 'bg-slate-300 hover:bg-slate-400 text-slate-800' },
+                    { text: 'Delete', className: 'bg-red-500 hover:bg-red-600 text-white', onClick: () => {
+                        let habits = getHabits();
+                        habits = habits.filter(h => h.id !== habitId);
+                        saveHabits(habits);
+
+                        const habitLogs = getHabitLogs();
+                        delete habitLogs[habitId];
+                        saveHabitLogs(habitLogs);
+
+                        hideDetailsModal();
+                        renderHabits();
+                        showMessageBox('Deleted!', 'Task successfully deleted.', [
+                            { text: 'OK', className: 'bg-slate-800 hover:bg-slate-900 text-white' }
+                        ]);
+                    }}
+                ]
+            );
+        };
+
+
+        const calculateStreak = (habitId) => {
+            const habitLogs = getHabitLogs();
+            const logsForHabit = habitLogs[habitId] || {};
+            let currentStreak = 0;
+            let date = new Date();
+            const habit = getHabits().find(h => h.id === habitId);
+            if (!habit) return 0;
+
+            const createdAtDate = new Date(habit.createdAt);
+
+            date.setDate(date.getDate() - 1);
+
+            while (true) {
+                const dateString = date.toISOString().slice(0, 10);
+                const log = logsForHabit[dateString];
+
+                if (!log || !log.avoided) {
+                    break;
+                }
+                currentStreak++;
+
+                date.setDate(date.getDate() - 1);
+
+                if (date < createdAtDate) {
+                    break;
+                }
+            }
+
+            const todayDateString = getTodayDateString();
+            const todayLog = logsForHabit[todayDateString];
+
+            if (todayLog && todayLog.avoided) {
+                currentStreak++;
+            }
+
+            return currentStreak;
+        };
+
+
+        const renderHabitDetails = (habit) => {
+            const habitLogs = getHabitLogs();
+            const logsForHabit = habitLogs[habit.id] || {};
+            const today = new Date();
+
+            detailsHabitName.textContent = habit.name;
+            detailsCurrentStreak.textContent = `${calculateStreak(habit.id)} days`;
+            detailsHabitTrigger.textContent = habit.trigger || 'N/A';
+            detailsHabitReplacement.textContent = habit.replacement || 'N/A';
+            detailsHabitSeverity.textContent = habit.severity;
+            if (deleteHabitBtn) {
+                 deleteHabitBtn.onclick = () => deleteHabit(habit.id);
+            }
+
+            if (calendarView) {
+                calendarView.innerHTML = '';
+                const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                daysOfWeek.forEach(day => {
+                    const header = document.createElement('div');
+                    header.className = 'font-bold text-slate-600 py-2';
+                    header.textContent = day;
+                    calendarView.appendChild(header);
+                });
+
+                const calendarDates = [];
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - i);
+                    calendarDates.push(date);
+                }
+
+                const firstDayInView = calendarDates[0];
+                let firstDayOfWeek = (firstDayInView.getDay() + 6) % 7;
+                for (let i = 0; i < firstDayOfWeek; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'p-2';
+                    calendarView.appendChild(emptyCell);
+                }
+
+
+                calendarDates.forEach(date => {
+                    const dateString = date.toISOString().slice(0, 10);
+                    const log = logsForHabit[dateString];
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'p-2 rounded-lg font-medium relative flex items-center justify-center aspect-square';
+
+                    let bgColor = 'bg-slate-100';
+                    let textColor = 'text-slate-700';
+                    let iconHtml = '';
+
+                    if (log) {
+                        if (log.avoided) {
+                            bgColor = 'bg-emerald-200';
+                            textColor = 'text-emerald-800';
+                            iconHtml = '<i class="fas fa-check text-emerald-600 text-xs absolute top-1 right-1"></i>';
+                        } else {
+                            bgColor = 'bg-rose-200';
+                            textColor = 'text-rose-800';
+                            iconHtml = '<i class="fas fa-times text-rose-600 text-xs absolute top-1 right-1"></i>';
+                        }
+                    }
+
+                    if (dateString === getTodayDateString()) {
+                        bgColor = 'bg-indigo-300';
+                        textColor = 'text-indigo-900';
+                    }
+
+                    dayDiv.classList.add(bgColor, textColor);
+                    dayDiv.innerHTML = `${date.getDate()} ${iconHtml}`;
+                    calendarView.appendChild(dayDiv);
+                });
+            }
+
+
+            const chartLabels = [];
+            const chartData = [];
+            const firstDate = new Date(today);
+            firstDate.setDate(today.getDate() - 29);
+
+            for (let i = 0; i < 30; i++) {
+                const currentDate = new Date(firstDate);
+                currentDate.setDate(firstDate.getDate() + i);
+                const dateString = currentDate.toISOString().slice(0, 10);
+                const log = logsForHabit[dateString];
+
+                chartLabels.push(currentDate.toLocaleString('default', { month: 'short', day: 'numeric' }));
+                chartData.push(log && log.avoided ? 1 : 0);
+            }
+
+            if (avoidanceChartCanvas) {
+                if (currentChart) {
+                    currentChart.destroy();
+                }
+                currentChart = new Chart(avoidanceChartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Avoided (1) / Slipped (0)',
+                            data: chartData,
+                            backgroundColor: chartData.map(value => value === 1 ? 'rgba(52, 211, 153, 0.8)' : 'rgba(251, 113, 133, 0.8)'),
+                            borderColor: chartData.map(value => value === 1 ? 'rgba(52, 211, 153, 1)' : 'rgba(251, 113, 133, 1)'),
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            barPercentage: 0.8,
+                            categoryPercentage: 0.9
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.raw === 1 ? 'Avoided' : 'Slipped / Not Logged';
+                                    }
+                                },
+                                backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                                titleFont: { size: 16 },
+                                bodyFont: { size: 14 },
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: 10,
+                                    font: { size: 12, family: 'Inter' },
+                                    color: '#64748b'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 1,
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: function(value, index, values) {
+                                        if (value === 0) return 'Slipped';
+                                        if (value === 1) return 'Avoided';
+                                        return '';
+                                    },
+                                    font: { size: 14, family: 'Inter' },
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    color: 'rgba(203, 213, 224, 0.5)',
+                                    borderDash: [5, 5]
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+
+            if (insightText) {
+                generateInsights(habit.id);
+            }
+        };
+
+        const generateInsights = (habitId) => {
+            const habitLogs = getHabitLogs();
+            const logsForHabit = habitLogs[habitId] || {};
+            const allLogs = Object.values(logsForHabit);
+
+            if (allLogs.length === 0) {
+                insightText.textContent = "Log some data to see insights!";
+                return;
+            }
+
+            let totalAvoided = allLogs.filter(log => log.avoided).length;
+            let totalSlipped = allLogs.filter(log => !log.avoided).length;
+            let totalLoggedDays = allLogs.length;
+
+            const avoidanceRate = totalLoggedDays > 0 ? (totalAvoided / totalLoggedDays * 100).toFixed(1) : 0;
+
+            const dayOfWeekAvoidance = {
+                0: { avoided: 0, total: 0 },
+                1: { avoided: 0, total: 0 },
+                2: { avoided: 0, total: 0 },
+                3: { avoided: 0, total: 0 },
+                4: { avoided: 0, total: 0 },
+                5: { avoided: 0, total: 0 },
+                6: { avoided: 0, total: 0 }
+            };
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+            for (const dateString in logsForHabit) {
+                const log = logsForHabit[dateString];
+                const date = new Date(dateString);
+                const day = date.getDay();
+
+                dayOfWeekAvoidance[day].total++;
+                if (log.avoided) {
+                    dayOfWeekAvoidance[day].avoided++;
+                }
+            }
+
+            let bestDay = '';
+            let highestRate = -1;
+            let worstDay = '';
+            let lowestRate = 101;
+
+            Object.keys(dayOfWeekAvoidance).forEach(dayNum => {
+                const data = dayOfWeekAvoidance[dayNum];
+                if (data.total > 0) {
+                    const rate = (data.avoided / data.total) * 100;
+                    if (rate > highestRate) {
+                        highestRate = rate;
+                        bestDay = dayNames[dayNum];
+                    }
+                    if (rate < lowestRate) {
+                        lowestRate = rate;
+                        worstDay = dayNames[dayNum];
+                    }
+                }
+            });
+
+            let insights = `You've avoided this habit on ${totalAvoided} out of ${totalLoggedDays} logged days (${avoidanceRate}% success rate). `;
+            if (bestDay && highestRate > 0) {
+                insights += `You tend to be most successful on ${bestDay} (${highestRate.toFixed(1)}% avoidance). `;
+            }
+            if (worstDay && lowestRate < 100) {
+                insights += `Your most challenging day seems to be ${worstDay} (${lowestRate.toFixed(1)}% avoidance).`;
+            }
+            if (totalAvoided === allLogs.length && allLogs.length > 0) {
+                insights = `You have a perfect record! You've avoided this habit every day it was logged. Keep it up!`;
+            } else if (totalSlipped === allLogs.length && allLogs.length > 0) {
+                 insights = `It looks like you've slipped on this habit every day it was logged. Let's focus on those replacement habits!`;
+            }
+
+
+            insightText.innerHTML = insights;
+        };
+
+
+        const openModal = (modalElement) => {
+            modalElement.classList.remove('hidden');
+            const innerModal = modalElement.querySelector('div');
+            setTimeout(() => {
+                innerModal.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        };
+
+        const closeModal = (modalElement) => {
+            const innerModal = modalElement.querySelector('div');
+            innerModal.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modalElement.classList.add('hidden');
+            }, 300);
+        };
+
+        const hideDetailsModal = () => closeModal(habitDetailsModal);
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            habitListContainer = document.getElementById('habitList');
+            habitNameInput = document.getElementById('habitNameInput');
+            addHabitBtn = document.getElementById('addHabitBtn');
+            newPrioritySelect = document.getElementById('newPriority');
+            newDueDateInput = document.getElementById('newDueDate');
+            tasksCounter = document.getElementById('tasksCounter');
+            remainingTasksCounter = document.getElementById('remainingTasksCounter');
+            progressBar = document.getElementById('progressBar');
+
+            habitDetailsModal = document.getElementById('habitDetailsModal');
+            closeDetailsModalBtn = document.getElementById('closeDetailsModal');
+            detailsHabitName = document.getElementById('detailsHabitName');
+            detailsCurrentStreak = document.getElementById('detailsCurrentStreak');
+            detailsHabitTrigger = document.getElementById('detailsHabitTrigger');
+            detailsHabitReplacement = document.getElementById('detailsHabitReplacement');
+            detailsHabitSeverity = document.getElementById('detailsHabitSeverity');
+            calendarView = document.getElementById('calendarView');
+            avoidanceChartCanvas = document.getElementById('avoidanceChart');
+            insightText = document.getElementById('insightText');
+            deleteHabitBtn = document.getElementById('deleteHabitBtn');
+
+            messageBox = document.getElementById('messageBox');
+            messageBoxTitle = document.getElementById('messageBoxTitle');
+            messageBoxContent = document.getElementById('messageBoxContent');
+            messageBoxButtons = document.getElementById('messageBoxButtons');
+
+
+            if (addHabitBtn) {
+                addHabitBtn.addEventListener('click', () => {
+                    const habitName = habitNameInput.value.trim();
+                    const priority = newPrioritySelect ? newPrioritySelect.value : 'medium';
+                    const dueDate = newDueDateInput ? newDueDateInput.value : null;
+
+                    if (habitName) {
+                        addHabit(habitName, '', '', priority, dueDate || null);
+                        habitNameInput.value = '';
+                        if (newDueDateInput) newDueDateInput.value = '';
+                        if (newPrioritySelect) newPrioritySelect.value = 'medium';
+                    } else {
+                        showMessageBox('Input Error', 'Task name cannot be empty.', [
+                            { text: 'OK', className: 'bg-red-500 hover:bg-red-600 text-white' }
+                        ]);
+                    }
+                });
+            }
+
+
+            if (habitNameInput) {
+                habitNameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (addHabitBtn) addHabitBtn.click();
+                    }
+                });
+            }
+
+
+            if (closeDetailsModalBtn) {
+                closeDetailsModalBtn.addEventListener('click', hideDetailsModal);
+            }
+
+
+            if (habitDetailsModal) {
+                habitDetailsModal.addEventListener('click', (e) => {
+                    if (e.target === habitDetailsModal) {
+                        hideDetailsModal();
+                    }
+                });
+            }
+            if (messageBox) {
+                messageBox.addEventListener('click', (e) => {
+                    if (e.target === messageBox) {
+                        hideMessageBox();
+                    }
+                });
+            }
+
+            renderHabits();
+        });
+    </script>
+</body>
+</html>
