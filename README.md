@@ -1,72 +1,85 @@
-# Tasks
+# 📅 Tasks: A Reverse To-Do List for Breaking Bad Habits
 
-Tasks is a minimalist web application designed to help you break bad habits by tracking your success in avoiding them, rather than completing tasks. It functions like a reverse to-do list, providing a clear, black-and-white interface focused on your progress.
-Features
+**Tasks** is a minimalist web application that flips the traditional to-do list on its head. Instead of tracking tasks you *complete*, it helps you monitor habits you *avoid*. With a black-and-white aesthetic and a distraction-free interface, Tasks supports your journey toward better habits by keeping things simple and focused.
 
-    Reverse To-Do List: Instead of marking tasks as "done," you mark habits as "avoided" for the day.
+---
 
-    Minimalist Design: Clean, black-and-white aesthetic with subtle interactions for a distraction-free experience.
+## ✨ Features
 
-    Quick Habit Addition: Easily add new bad habits directly from the main interface with optional priority and due date.
+* **↺ Reverse To-Do List**
+  Track habits by marking them as "avoided" each day instead of "done."
 
-    Daily Tracking: Mark habits as avoided with a simple click on the custom checkbox-style circle.
+* **⬛ Minimalist Design**
+  Clean, black-and-white theme with subtle interactions to reduce distractions.
 
-    Progress Overview: See your daily progress with "Avoided / Total" counters and a subtle progress bar.
+* **➕ Quick Habit Addition**
+  Add new habits directly from the main screen with optional priority and due date.
 
-    Detailed Insights (Modal): Click on any habit to view a detailed progress modal, including:
+* **🗒️ Daily Tracking**
+  Log daily avoidance with a simple click on a checkbox-style circle.
 
-        Current avoidance streak.
+* **🌄 Progress Overview**
+  View daily stats: "Avoided / Total" and a visual progress bar.
 
-        Optional trigger and replacement habit information.
+* **🔍 Detailed Insights (Modal)**
+  Click any habit to open a detailed modal showing:
 
-        A 30-day calendar view of your avoidance history.
+  * Current avoidance streak
+  * Optional trigger and replacement habit info
+  * 30-day calendar view
+  * Avoidance trend chart
+  * Basic habit-breaking insights
 
-        A chart visualizing your avoidance trend.
+* **🔥 Delete Habit**
+  Remove any habit and its log history from the modal.
 
-        Basic insights into your habit-breaking patterns.
+* **🛋 Responsive Layout**
+  Optimized for all screen sizes.
 
-    Delete Habit: Remove any habit (and its associated logs) via the details modal.
+* **📊 Local Storage**
+  Data is stored in-browser so your habits persist even after closing the tab.
 
-    Responsive Layout: Adapts to various screen sizes.
+---
 
-    Local Storage: All your habits and their daily avoidance logs are saved directly in your browser's local storage, so your data persists even if you close the tab.
+## 🚀 How to Use
 
-## How to Use
+### Add a New Habit
 
-    Add a New Habit:
+1. Type your bad habit into the **"Add task"** input.
+2. (Optional) Choose a **priority** (High, Medium, Low) and **due date**.
+3. Click the **+** button or press **Enter** to add it to the list.
 
-        Type the name of the bad habit you want to track in the "Add task" input field.
+### Track Your Daily Avoidance
 
-        (Optional) Select a priority ("High," "Medium," "Low") and a due date using the respective inputs below the task field.
+* Click the **circular checkbox** next to a habit to mark it as avoided for the day:
 
-        Click the + button or press Enter to add the habit to your list.
+  * **Empty Circle**: Not avoided today.
+  * **Filled Circle**: Marked as avoided today (text is struck-through and grayed out).
+* Click again to **undo** the avoidance.
 
-    Track Your Daily Avoidance:
+### View Habit Details
 
-        For each habit on your list, click the circular checkbox on the left.
+* Click on a habit's **text** (not the checkbox or delete icon) to open its modal.
+* Inside the modal, see:
 
-        If the circle is empty, clicking it will mark the habit as "Avoided Today" (the circle fills with black, and the text becomes grayed-out and struck-through).
+  * Current streak
+  * Trigger/replacement info
+  * 30-day history
+  * Charts and insights
 
-        If the circle is filled (Avoided Today), clicking it will mark the habit as "Not Logged Today" (the circle becomes empty again, and the text reverts). This is how you "undo" an avoidance or clear a log for the day.
+### Delete a Habit
 
-    View Habit Details:
+1. Open the habit's modal.
+2. Click **"Delete Task"** at the bottom.
+3. Confirm the deletion.
 
-        Click anywhere on a habit's text (not the checkbox or delete icon) in the main list to open a detailed modal.
+---
 
-        This modal provides a comprehensive view of your progress for that specific habit, including streaks, a calendar, a chart, and insights.
+## ⚙️ Getting Started
 
-    Delete a Habit:
+1. Save the complete app as a `.html` file (e.g., `index.html`).
+2. Open it in any modern web browser.
 
-        Open the habit's details modal (by clicking on its text).
+> ✅ All habit data is saved in local storage and persists across sessions automatically.
 
-        Click the "Delete Task" button at the bottom of the modal. You will be asked to confirm.
-
-## Getting Started
-
-To run this application locally:
-
-    Save the entire code into a single .html file (e.g., index.html).
-
-    Open the index.html file in any modern web browser.
-
-Your habits will be saved automatically in your browser's local storage.
+---
